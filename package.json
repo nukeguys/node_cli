@@ -1,0 +1,18 @@
+{
+  "name": "node_cli",
+  "version": "0.0.1",
+  "description": "node command-line-interface",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nukeguys/node_cli.git"
+  },
+  "author": "nuKeguyS",
+  "bugs": {
+    "url": "https://github.com/nukeguys/node_cli/issues"
+  },
+  "homepage": "https://github.com/nukeguys/node_cli#readme"
+}
