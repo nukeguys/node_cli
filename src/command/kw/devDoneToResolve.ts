@@ -1,10 +1,10 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import Jira, { getIssueTransitions } from "../../common/jira";
+import Jira, { JiraClient } from "../../common/jira";
 import inquirer from "inquirer";
 import { JiraIssue } from "../../common/type";
-import JiraApi from "jira-client";
 import ProgressBar from "progress";
+import { IssueBean } from "jira.js/out/version2/models";
 
 const RESOLVE_TRANSITION_NAME = "배포";
 
@@ -18,10 +18,13 @@ dtr
 
 async function transitionDevDoneToResolve(version?: string) {
   const jira = await Jira.client();
-  const result = await jira.searchJira("filter=Web_DevDone", {
+
+  const result = await jira.issueSearch.searchForIssuesUsingJql({
+    jql: "filter=Web_DevDone",
     fields: ["key", "summary", "reporter", "assignee"],
     maxResults: 500, // maybe too many
   });
+
   const issues = parseIssues(result.issues);
 
   printIssues(issues);
@@ -38,26 +41,33 @@ async function transitionDevDoneToResolve(version?: string) {
   ]);
   if (!resolve) return;
 
-  const transitions = await getIssueTransitions(jira, issues[0]);
-  const transitionId = transitions.find(
-    (transition: any) => transition.name === RESOLVE_TRANSITION_NAME
-  )?.id;
+  const { transitions } = await jira.issues.getTransitions({
+    issueIdOrKey: issues[0].key,
+  });
+  const transitionId =
+    transitions?.find(
+      (transition: any) => transition.name === RESOLVE_TRANSITION_NAME
+    )?.id || "";
 
   if (transitionId) {
     const comment = `배포완료${version ? ` (${version})` : ""}`;
     const progress = new ProgressBar("resolving [:bar] :current/:total", {
       complete: "=",
       incomplete: " ",
-      width: Math.max(5, issues.length),
+      width: issues.length,
       total: issues.length,
     });
 
     issues.forEach(async issue => {
-      await resolveIssue(jira, {
-        issue: issue as JiraIssue,
-        transitionId,
-        comment,
-      });
+      try {
+        await resolveIssue(jira, {
+          issue: issue as JiraIssue,
+          transitionId,
+          comment,
+        });
+      } catch (err) {
+        console.log(err.response);
+      }
       progress.tick();
       if (progress.complete) {
         console.info(chalk.green("Done!"));
@@ -67,39 +77,41 @@ async function transitionDevDoneToResolve(version?: string) {
     console.error(
       `There is no transition ${chalk.red(
         RESOLVE_TRANSITION_NAME
-      )} in [${transitions.map(t => t.name).join(", ")}]`
+      )} in [${transitions?.map(t => t.name).join(", ")}]`
     );
   }
 }
 
-function parseIssues(issues: any[]): JiraIssue[] {
-  return issues.map((issue: any) => ({
-    key: issue.key,
-    summary: issue.fields.summary,
-    assignee: {
-      accountId: issue.fields.assignee.accountId,
-      displayName: issue.fields.assignee.displayName,
-    },
-    reporter: {
-      accountId: issue.fields.reporter.accountId,
-      displayName: issue.fields.reporter.displayName,
-    },
-  }));
+function parseIssues(issues?: IssueBean[]): JiraIssue[] {
+  return (
+    issues?.map(issue => ({
+      key: issue.key,
+      summary: issue.fields.summary,
+      assignee: {
+        accountId: issue.fields.assignee?.accountId || "",
+        displayName: issue.fields.assignee?.displayName || "",
+      },
+      reporter: {
+        accountId: issue.fields.reporter.accountId || "",
+        displayName: issue.fields.reporter.displayName || "",
+      },
+    })) || []
+  );
 }
 
 function printIssues(issues: JiraIssue[]) {
   console.info(`total ${chalk.green(issues.length)} issues.`);
-  issues.forEach(issue => {
+  issues.forEach(({ key, summary, assignee: { displayName } }) => {
     console.info(
-      `${chalk.red(issue.key)} ${issue.summary} ${chalk.blueBright(
-        `<${issue.assignee.displayName}>`
+      `${chalk.red(key)} ${summary} ${chalk.blueBright(
+        displayName ? `<${displayName}>` : ""
       )}`
     );
   });
 }
 
 async function resolveIssue(
-  jira: JiraApi,
+  jira: JiraClient,
   {
     issue,
     transitionId,
@@ -111,11 +123,18 @@ async function resolveIssue(
   }
 ) {
   await Promise.all([
-    jira.transitionIssue(issue.key, {
+    jira.issues.doTransition({
+      issueIdOrKey: issue.key,
       transition: { id: transitionId },
     }),
-    jira.updateAssigneeWithId(issue.key, issue.reporter.accountId),
-    jira.addComment(issue.key, comment),
+    jira.issues.assignIssue({
+      issueIdOrKey: issue.key,
+      accountId: issue.reporter.accountId,
+    }),
+    jira.issueComments.addComment({
+      issueIdOrKey: issue.key,
+      body: comment,
+    }),
   ]);
 }
 

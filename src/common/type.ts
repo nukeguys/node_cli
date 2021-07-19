@@ -1,3 +1,9 @@
+export interface JiraConfig {
+  host: string;
+  email: string;
+  apiToken: string;
+}
+
 export interface JiraIssue {
   key: string;
   summary: string;

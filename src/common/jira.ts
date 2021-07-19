@@ -1,32 +1,27 @@
-import JiraApi from "jira-client";
 import { getCongif, setConfig } from "./config";
 import inquirer from "inquirer";
 import chalk from "chalk";
-import { JiraIssue, JiraTransition } from "./type";
+import { JiraConfig } from "./type";
+import { Version2Client } from "jira.js";
 
-interface JiraConfig {
-  host: string;
-  email: string;
-  token: string;
-}
+export type JiraClient = Version2Client;
 
-let jiraApi: JiraApi;
+let jiraClient: JiraClient;
 async function client() {
-  if (jiraApi) return jiraApi;
+  if (jiraClient) return jiraClient;
 
   const config = await getJiraConfig();
-  jiraApi = getJiraApi(config);
-  return jiraApi;
+  jiraClient = getJiraClient(config);
+  return jiraClient;
 }
 
-function getJiraApi(config: JiraConfig) {
-  return new JiraApi({
-    protocol: "https",
-    apiVersion: "2",
-    strictSSL: true,
+function getJiraClient(config: JiraConfig) {
+  return new Version2Client({
     host: config.host,
-    username: config.email,
-    password: config.token,
+    authentication: {
+      basic: { email: config.email, apiToken: config.apiToken },
+    },
+    telemetry: true,
   });
 }
 
@@ -47,7 +42,7 @@ async function initJiraConfig() {
     {
       type: "input",
       name: "host",
-      message: "Jira URL(xxx.atlassian.net):",
+      message: "Jira URL(https://xxx.atlassian.net):",
     },
     {
       type: "input",
@@ -56,17 +51,20 @@ async function initJiraConfig() {
     },
     {
       type: "input",
-      name: "token",
+      name: "apiToken",
       message:
         "Api Token(https://id.atlassian.com/manage-profile/security/api-tokens):",
     },
   ]);
 
   try {
-    const jiraForValidation = getJiraApi(answer);
-    const user = await jiraForValidation.getCurrentUser();
+    const jiraForValidation = getJiraClient(answer);
+    const user = await jiraForValidation.myself.getCurrentUser();
+    // const user = await jiraForValidation.getCurrentUser();
     console.info(
-      `connect to jira: ${chalk.green(user.displayName)} / ${user.accountId}`
+      `connect to jira: ${chalk.green(`<${user.displayName}>`)} ${
+        user.accountId
+      }`
     );
     return answer;
   } catch (error) {
@@ -76,11 +74,6 @@ async function initJiraConfig() {
       )}`
     );
   }
-}
-
-export async function getIssueTransitions(jira: JiraApi, issue: JiraIssue) {
-  const { transitions } = await jira.listTransitions(issue.key);
-  return transitions as JiraTransition[];
 }
 
 const Jira = { client };
