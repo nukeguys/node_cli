@@ -10,3 +10,9 @@ export interface JiraIssue {
     displayName: string;
   };
 }
+
+export interface JiraTransition {
+  id: string;
+  name: string;
+  // to, hasScreen, isGlobal, isInitial, isAvailable, isConditional, fields, isLooped
+}

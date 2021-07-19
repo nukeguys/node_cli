@@ -1,12 +1,12 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import Jira from "../../common/jira";
+import Jira, { getIssueTransitions } from "../../common/jira";
 import inquirer from "inquirer";
-import { JiraIssue } from "./type";
+import { JiraIssue } from "../../common/type";
 import JiraApi from "jira-client";
 import ProgressBar from "progress";
 
-const RESOLVE_TRANSITION_NAME = "수정배포";
+const RESOLVE_TRANSITION_NAME = "배포";
 
 const dtr = new Command("dtr");
 
@@ -36,10 +36,9 @@ async function transitionDevDoneToResolve(version?: string) {
       default: false,
     },
   ]);
-
   if (!resolve) return;
 
-  const { transitions } = await jira.listTransitions(issues[0].key);
+  const transitions = await getIssueTransitions(jira, issues[0]);
   const transitionId = transitions.find(
     (transition: any) => transition.name === RESOLVE_TRANSITION_NAME
   )?.id;
@@ -66,7 +65,9 @@ async function transitionDevDoneToResolve(version?: string) {
     });
   } else {
     console.error(
-      `There is no transition name '${chalk.red(RESOLVE_TRANSITION_NAME)}'`
+      `There is no transition ${chalk.red(
+        RESOLVE_TRANSITION_NAME
+      )} in [${transitions.map(t => t.name).join(", ")}]`
     );
   }
 }

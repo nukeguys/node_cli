@@ -2,6 +2,7 @@ import JiraApi from "jira-client";
 import { getCongif, setConfig } from "./config";
 import inquirer from "inquirer";
 import chalk from "chalk";
+import { JiraIssue, JiraTransition } from "./type";
 
 interface JiraConfig {
   host: string;
@@ -75,6 +76,11 @@ async function initJiraConfig() {
       )}`
     );
   }
+}
+
+export async function getIssueTransitions(jira: JiraApi, issue: JiraIssue) {
+  const { transitions } = await jira.listTransitions(issue.key);
+  return transitions as JiraTransition[];
 }
 
 const Jira = { client };
