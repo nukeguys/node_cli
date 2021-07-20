@@ -1,8 +1,6 @@
-#!/usr/bin/env node
-
 import { Command } from "commander";
-import Commands from "./src/commands";
-import { keys } from "./src/common/util";
+import Commands from "./commands";
+import { keys } from "./common/util";
 
 const VERSION = "0.0.1";
 

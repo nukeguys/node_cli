@@ -5,7 +5,7 @@
   "main": "nu.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "rm -rf ./dist && tsc -p ./tsconfig.json"
+    "build": "webpack --mode=production"
   },
   "repository": {
     "type": "git",
@@ -29,13 +29,18 @@
     "@types/node": "^16.3.2",
     "@types/progress": "^2.0.4",
     "@types/shelljs": "^0.8.9",
+    "clean-webpack-plugin": "^4.0.0-alpha.0",
+    "copy-webpack-plugin": "^9.0.1",
+    "terser-webpack-plugin": "^5.1.4",
+    "ts-loader": "^9.2.3",
     "ts-node": "^10.1.0",
     "typescript": "^4.3.5",
-    "webpack": "^5.44.0"
+    "webpack": "^5.45.1",
+    "webpack-cli": "^4.7.2"
   },
   "bin": {
     "nu": "./dist/nu.js",
-    "checkout": "./dist/src/command/checkout/index.js",
-    "kw": "./dist/src/command/kw/index.js"
+    "checkout": "./dist/checkout.js",
+    "kw": "./dist/kw.js"
   }
 }
