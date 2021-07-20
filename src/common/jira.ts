@@ -60,7 +60,6 @@ async function initJiraConfig() {
   try {
     const jiraForValidation = getJiraClient(answer);
     const user = await jiraForValidation.myself.getCurrentUser();
-    // const user = await jiraForValidation.getCurrentUser();
     console.info(
       `connect to jira: ${chalk.green(`<${user.displayName}>`)} ${
         user.accountId

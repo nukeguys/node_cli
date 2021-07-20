@@ -21,15 +21,14 @@ async function transitionDevDoneToResolve(version?: string) {
 
   const result = await jira.issueSearch.searchForIssuesUsingJql({
     jql: "filter=Web_DevDone",
-    fields: ["key", "summary", "reporter", "assignee"],
+    fields: ["project", "key", "summary", "reporter", "assignee"],
     maxResults: 500, // maybe too many
   });
 
   const issues = parseIssues(result.issues);
-
   printIssues(issues);
 
-  if (dtr.opts().list) return;
+  if (dtr.opts().list || issues.length === 0) return;
 
   const { resolve } = await inquirer.prompt([
     {
@@ -41,16 +40,27 @@ async function transitionDevDoneToResolve(version?: string) {
   ]);
   if (!resolve) return;
 
-  const { transitions } = await jira.issues.getTransitions({
-    issueIdOrKey: issues[0].key,
-  });
-  const transitionId =
-    transitions?.find(
-      (transition: any) => transition.name === RESOLVE_TRANSITION_NAME
-    )?.id || "";
+  if (version) {
+    const projectId = result.issues?.[0].fields.project.id;
+
+    if (!(await isExistVersion({ jira, projectId, version }))) {
+      const createdVersion = await createVersion({ jira, projectId, version });
+      if (createdVersion)
+        console.info(`${chalk.green(createdVersion.name)} version is created.`);
+      else {
+        version = undefined;
+        console.info(`fail to create version`);
+      }
+    }
+  }
+
+  const transitionId = await getTransitionId(
+    jira,
+    issues[0].key,
+    RESOLVE_TRANSITION_NAME
+  );
 
   if (transitionId) {
-    const comment = `배포완료${version ? ` (${version})` : ""}`;
     const progress = new ProgressBar("resolving [:bar] :current/:total", {
       complete: "=",
       incomplete: " ",
@@ -58,26 +68,27 @@ async function transitionDevDoneToResolve(version?: string) {
       total: issues.length,
     });
 
-    issues.forEach(async issue => {
+    for (const issue of issues) {
       try {
         await resolveIssue(jira, {
           issue: issue as JiraIssue,
           transitionId,
-          comment,
+          version,
         });
       } catch (err) {
-        console.log(err.response);
+        console.error(err.response.data.errorMessages);
       }
       progress.tick();
-      if (progress.complete) {
-        console.info(chalk.green("Done!"));
-      }
-    });
+    }
+
+    if (progress.complete) {
+      console.info(chalk.green("Complete!"));
+    } else {
+      console.error(chalk.red("Something is wrong"));
+    }
   } else {
     console.error(
-      `There is no transition ${chalk.red(
-        RESOLVE_TRANSITION_NAME
-      )} in [${transitions?.map(t => t.name).join(", ")}]`
+      `There is no transition ${chalk.red(RESOLVE_TRANSITION_NAME)}`
     );
   }
 }
@@ -110,19 +121,59 @@ function printIssues(issues: JiraIssue[]) {
   });
 }
 
+async function getTransitionId(jira: JiraClient, key: string, name: string) {
+  const { transitions } = await jira.issues.getTransitions({
+    issueIdOrKey: key,
+  });
+  return transitions?.find(
+    (transition: any) => transition.name === RESOLVE_TRANSITION_NAME
+  )?.id;
+}
+
+async function isExistVersion({
+  jira,
+  projectId,
+  version,
+}: {
+  jira: JiraClient;
+  projectId: string;
+  version: string;
+}) {
+  const versions = await jira.projectVersions.getProjectVersionsPaginated({
+    projectIdOrKey: projectId,
+    query: version,
+  });
+  return !!versions.values?.length;
+}
+
+async function createVersion({
+  jira,
+  projectId,
+  version,
+}: {
+  jira: JiraClient;
+  projectId: string;
+  version: string;
+}) {
+  return await jira.projectVersions.createVersion({
+    projectId: Number(projectId),
+    name: version,
+  });
+}
+
 async function resolveIssue(
   jira: JiraClient,
   {
     issue,
     transitionId,
-    comment,
+    version,
   }: {
     issue: JiraIssue;
     transitionId: string;
-    comment: string;
+    version?: string;
   }
 ) {
-  await Promise.all([
+  const works = [
     jira.issues.doTransition({
       issueIdOrKey: issue.key,
       transition: { id: transitionId },
@@ -131,11 +182,18 @@ async function resolveIssue(
       issueIdOrKey: issue.key,
       accountId: issue.reporter.accountId,
     }),
-    jira.issueComments.addComment({
-      issueIdOrKey: issue.key,
-      body: comment,
-    }),
-  ]);
+  ];
+
+  if (version) {
+    works.push(
+      jira.issues.editIssue({
+        issueIdOrKey: issue.key,
+        update: { fixVersions: [{ add: { name: version } }] },
+      })
+    );
+  }
+
+  await Promise.all(works);
 }
 
 export default dtr;
