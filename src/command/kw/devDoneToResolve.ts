@@ -6,7 +6,7 @@ import { JiraIssue } from "../../common/type";
 import ProgressBar from "progress";
 import { IssueBean } from "jira.js/out/version2/models";
 
-const RESOLVE_TRANSITION_NAME = "배포";
+const RESOLVE_TRANSITION_NAME = "Deploy";
 
 const dtr = new Command("dtr");
 
