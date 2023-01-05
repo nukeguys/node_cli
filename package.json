@@ -1,0 +1,43 @@
+{
+  "name": "node_cli",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf ./dist && node esbuild.config.js",
+    "c": "pnpm build && node ./dist/index.js"
+  },
+  "keywords": [
+    "cli"
+  ],
+  "author": "nukeguys",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=3"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/inquirer": "9.0.3",
+    "@types/node": "18.11.18",
+    "@types/shelljs": "0.8.11",
+    "@typescript-eslint/eslint-plugin": "5.48.0",
+    "@typescript-eslint/parser": "5.48.0",
+    "esbuild": "0.16.13",
+    "eslint": "8.31.0",
+    "jira-client": "8.2.2",
+    "prettier": "2.8.1",
+    "shelljs": "0.8.5",
+    "typescript": "4.9.4"
+  },
+  "bin": {
+    "c": "./dist/index.js",
+    "checkout": "./dist/commands/checkout/index.js"
+  },
+  "dependencies": {
+    "chalk": "5.2.0",
+    "commander": "9.4.1",
+    "glob": "8.0.3",
+    "inquirer": "9.1.4"
+  }
+}
