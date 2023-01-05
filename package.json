@@ -19,6 +19,7 @@
   "type": "module",
   "devDependencies": {
     "@types/inquirer": "9.0.3",
+    "@types/jira-client": "7.1.5",
     "@types/node": "18.11.18",
     "@types/shelljs": "0.8.11",
     "@typescript-eslint/eslint-plugin": "5.48.0",
@@ -32,9 +33,11 @@
   },
   "bin": {
     "c": "./dist/index.js",
-    "checkout": "./dist/commands/checkout/index.js"
+    "checkout": "./dist/commands/checkout/index.js",
+    "streami": "./dist/commands/streami/index.js"
   },
   "dependencies": {
+    "@gitbeaker/node": "35.8.0",
     "chalk": "5.2.0",
     "commander": "9.4.1",
     "glob": "8.0.3",
