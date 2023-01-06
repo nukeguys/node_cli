@@ -1,8 +1,8 @@
 import { Gitlab } from "@gitbeaker/node";
 
-type GitLabType = ReturnType<typeof getGitlab>;
+type GitLabType = ReturnType<typeof getGitlabApi>;
 
-export const getGitlab = (host: string, token: string) => {
+export const getGitlabApi = (host: string, token: string) => {
   return new Gitlab({
     host,
     token,

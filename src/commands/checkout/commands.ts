@@ -2,7 +2,7 @@ import { Command } from "commander";
 import shell from "shelljs";
 import chalk from "chalk";
 import inquirer from "inquirer";
-import { getBranches } from "../../utils/git";
+import { git } from "@utils";
 
 const checkout = new Command("checkout");
 
@@ -13,7 +13,8 @@ checkout
   .action(async (filter?: string) => {
     const options = checkout.opts();
 
-    const branches = getBranches({ all: options.all, filter });
+    if (options.all) git.fetch();
+    const branches = git.getBranches({ all: options.all, filter });
     if (!branches) return;
 
     const { branch } = await inquirer.prompt([

@@ -1,8 +1,9 @@
 import { Command } from "commander";
-import { getGitlab, getMergeRequests } from "../../utils/gitlab";
-import { GIT_LAB } from "../../../.secret";
-import { MEMBERS } from "./constants";
 import chalk from "chalk";
+
+import { gitlab } from "@utils";
+import { MEMBERS } from "./constants";
+import { GIT_LAB } from "../../../.secret";
 
 const mr = new Command("mr");
 
@@ -11,8 +12,8 @@ mr.description("list of open MR list")
   .action(async () => {
     const { member } = mr.opts();
 
-    const gitlab = getGitlab(GIT_LAB.host, GIT_LAB.token);
-    const mrs = await getMergeRequests(gitlab, {
+    const gitlabApi = gitlab.getGitlabApi(GIT_LAB.host, GIT_LAB.token);
+    const mrs = await gitlab.getMergeRequests(gitlabApi, {
       projectId: 22,
       state: "opened",
     });

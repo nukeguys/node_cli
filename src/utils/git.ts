@@ -35,3 +35,8 @@ export const getCurrentBranch = () => {
 
   return result.stdout.split("\n")[0];
 };
+
+export const fetch = () => {
+  const cmd = `git fetch`;
+  shell.exec(cmd, { silent: true });
+};
