@@ -31,11 +31,11 @@ export const creatSubTask = async (
     assigneeId,
   }: {
     summary: string;
-    description: string;
+    description?: string;
     projectId: number;
     parentKey: string;
     issueTypeId: number;
-    componentsId: number;
+    componentsId?: number;
     assigneeId: string;
   }
 ): Promise<{ id: number; key: string }> => {
