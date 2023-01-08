@@ -6,7 +6,7 @@ build({
   bundle: true,
   outdir: "dist",
   minify: true,
-  target: "esnext",
+  target: ["node16"],
   platform: "node",
   format: "esm",
   banner: {

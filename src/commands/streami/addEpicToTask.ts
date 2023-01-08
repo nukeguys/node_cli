@@ -18,7 +18,7 @@ epic.description("add migration epic to task").action(async () => {
     tasks
       .trim()
       .split("\n")
-      .forEach(async (key) => {
+      .forEach(async key => {
         const jiraApi = jira.getJiraApi(JIRA);
         jira.updateCustomField(jiraApi, key, {
           key: "customfield_10014",

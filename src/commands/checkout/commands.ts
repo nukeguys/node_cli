@@ -24,13 +24,13 @@ checkout
         prefix: ">",
         message: "which branch do you want to checkout?",
         pageSize: 10,
-        choices: branches.list.map((branch) => ({
+        choices: branches.list.map(branch => ({
           name:
             branch === branches.current ? chalk.green(`* ${branch}`) : branch,
           value: branch,
         })),
         default: branches.current,
-        filter: (answer) => answer.replace("remotes/origin/", "").trim(),
+        filter: answer => answer.replace("remotes/origin/", "").trim(),
       },
     ]);
 

@@ -3,7 +3,7 @@ import chalk from "chalk";
 
 import { gitlab } from "@utils";
 import { MEMBERS } from "./constants";
-import { GIT_LAB } from "../../../.secret";
+import { GIT_LAB } from ".secret";
 
 const mr = new Command("mr");
 
@@ -18,8 +18,8 @@ mr.description("list of open MR list")
       state: "opened",
     });
 
-    const infos = mrs.map((mr) => {
-      const reviewers = MEMBERS.filter((member) =>
+    const infos = mrs.map(mr => {
+      const reviewers = MEMBERS.filter(member =>
         mr.description.toLowerCase().includes(member)
       );
 
@@ -31,13 +31,13 @@ mr.description("list of open MR list")
       };
     });
 
-    infos.forEach((info) => {
+    infos.forEach(info => {
       if (member === undefined || info.reviewers.includes(`@${member}`)) {
         console.log(
           `# ${info.title} from ${chalk.blue(
             info.authorName
           )} to [${info.reviewers
-            .map((reviewer) => chalk.green(reviewer))
+            .map(reviewer => chalk.green(reviewer))
             .join(", ")}]`
         );
         console.log(`> ${chalk.yellow(info.url)}`);
