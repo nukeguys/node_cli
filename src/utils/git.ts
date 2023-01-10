@@ -8,7 +8,7 @@ export const getBranches = ({
   filter?: string;
 }): { list: string[]; current: string } | undefined => {
   const cmd = `git branch ${all ? "-a" : ""} ${
-    filter ? `| grep ${filter}` : ""
+    filter ? `| grep ${filter} -i` : ""
   }`;
 
   const result = shell.exec(cmd, { silent: true });
@@ -20,7 +20,7 @@ export const getBranches = ({
   const list = result
     .trim()
     .split("\n")
-    .map((line) => line.trim().replace("* ", ""));
+    .map(line => line.trim().replace("* ", ""));
 
   return {
     list,
